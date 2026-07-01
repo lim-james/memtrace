@@ -1,0 +1,21 @@
+# Build artifacts
+*.so
+*.o
+*.ll
+
+# Binaries
+test
+test_flat
+test_oam
+
+# Traces
+trace*.txt
+
+# Visualizations
+viz*.html
+
+# Build directories
+build/
+
+# CMake
+CMakeLists.txt
