@@ -18,3 +18,5 @@ make            # builds build/mem_trace_pass.so and build/runtime.o
 ## Release
 
 _Work in progress, no deployments yet_
+
+> Visualiser (tools/render.py) is vibe coded w/ the help of Claude.
