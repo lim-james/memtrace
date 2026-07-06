@@ -30,7 +30,7 @@ runtime.o: runtime.cpp
 # compile a target program with the pass and link runtime
 # usage: make TARGET=test.cpp
 test: mem_trace_pass.so runtime.o
-	$(CXX) $(CXXFLAGS) -fpass-plugin=./mem_trace_pass.so runtime.o $(TARGET) -o test
+	$(CXX) $(CXXFLAGS) -fpass-plugin=./mem_trace_pass.so -g runtime.o $(TARGET) -o test
 
 clean:
 	rm -f mem_trace_pass.so runtime.o test
