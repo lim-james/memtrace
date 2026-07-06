@@ -6,6 +6,7 @@
 #include "llvm/IR/InstIterator.h"
 #include "llvm/Passes/PassPlugin.h"
 #include "llvm/Passes/PassBuilder.h"
+#include "llvm/Demangle/Demangle.h"
 
 #include <cstdint>
 #include <string>
@@ -42,14 +43,21 @@ public:
                 continue;
             }
 
-            llvm::IRBuilder builder{&instr};
-            llvm::Value* args[] = {
-                builder.CreateGlobalString(fn.getName()),
-                address_ptr,
-                builder.getInt32(size),
-                builder.getInt8(is_write)
-            };
-            builder.CreateCall(mt_access_fn, args);
+            const std::string demangled_fn_name = llvm::demangle(fn.getName().str());
+
+            if (auto dl = instr.getDebugLoc()) {
+                llvm::IRBuilder builder{&instr};
+                llvm::Value* args[] = {
+                    builder.CreateGlobalString(demangled_fn_name),
+                    builder.CreateGlobalString(dl->getFilename()),
+                    builder.getInt32(dl->getLine()),
+                    builder.getInt32(dl->getColumn()),
+                    address_ptr,
+                    builder.getInt32(size),
+                    builder.getInt8(is_write)
+                };
+                builder.CreateCall(mt_access_fn, args);
+            }
         }
 
 
@@ -68,6 +76,9 @@ private:
             llvm::Type::getVoidTy(context), 
             {
                 llvm::PointerType::get(context, 0), // char*    function_name 
+                llvm::PointerType::get(context, 0), // char*    filename 
+                llvm::Type::getInt32Ty(context),    // uint32_t line
+                llvm::Type::getInt32Ty(context),    // uint32_t column
                 llvm::PointerType::get(context, 0), // void*    addr
                 llvm::Type::getInt32Ty(context),    // uint32_t size
                 llvm::Type::getInt8Ty(context)      // uint8_t  is_write

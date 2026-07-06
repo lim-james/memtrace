@@ -21,8 +21,11 @@ struct MemoryAccess {
 };
 
 struct MemAccessEvent {
-    short_string function_name;
-    MemoryAccess memory_access;
+    short_string  function_name;
+    short_string  filename;
+    std::uint32_t line;
+    std::uint32_t column;
+    MemoryAccess  memory_access;
 };
 
 struct PrettyPrint {
@@ -43,10 +46,14 @@ struct SimplePrint {
     void process(const MemAccessEvent& event) {
         fprintf(
             stderr, 
-            "%s %u %lu\n", 
+            "%s %u %lu %s::%u::%u %s\n", 
             event.memory_access.is_write ? "W" : "R", 
             event.memory_access.size, 
-            event.memory_access.address
+            event.memory_access.address,
+            event.filename.data(),
+            event.line,
+            event.column,
+            event.function_name.data() 
         );
     }
 };
@@ -171,12 +178,18 @@ short_string make_short_string(char* c_str) {
 
 extern "C" void __mt_access(
     char*    function_name, 
+    char*    filename, 
+    uint32_t line,
+    uint32_t column,
     void*    addr,
     uint32_t size,
     uint8_t  is_write
 ) {
     runtime.producer.try_push(MemAccessEvent{
         .function_name = make_short_string(function_name),
+        .filename      = make_short_string(filename),
+        .line          = line,
+        .column        = column,
         .memory_access = {
             .address       = reinterpret_cast<uintptr_t>(addr),
             .size          = size,
